@@ -27,11 +27,8 @@ def add_run_info_to_spreadsheet(duration, miles, calories):
             "calories": calories
         }
     }
-    print(f"attempting to insert {sheety_body}")
-    response = requests.post(url="https://api.sheety.co/3a66a46ee7c6d694f1a39c8a7971826a/projectWorkoutStats/sheet1", json=sheety_body)
-    print(response.text)
-    response.raise_for_status()
-    print('added row into sheet')
+    sheety_response = requests.post(url="https://api.sheety.co/3a66a46ee7c6d694f1a39c8a7971826a/projectWorkoutStats/sheet1", json=sheety_body)
+    sheety_response.raise_for_status()
 
 # prompt the user for information regarding their last workout
 exercise_text = input("Tell me which exercises you did: ")
@@ -41,27 +38,27 @@ response = requests.post(url="https://trackapi.nutritionix.com/v2/natural/exerci
 response.raise_for_status()
 print(json.dumps(response.json(), indent=4))
 
-# if the workout is related to running, i want to insert it into my run spreadsheet
+# if the workout is run related, i want to insert it into my run spreadsheet
 # if i ran, collect information about my run, including how far (in miles) i ran for...
-running_exercise = False
+was_running_exercise = False
 workout = response.json()
 for exercise in workout['exercises']:
     if exercise['user_input'] in ["ran", "run"]:
         duration = exercise['duration_min']
         calories = exercise['nf_calories']
 
-        # we've determined the user has run, how far did they run for?
-        print("you ran!")
+        # we've determined i went running; how far did i go?  prompt if it was not originally supplied in exercise_text
         miles_run = extract_miles(exercise_text)
         if miles_run is None:
             miles_run = input("how far did you run for? ")
 
-        running_exercise = True
+        was_running_exercise = True
         break
 
 # if i went running, enter the data into the spreadsheet
-if running_exercise:
-    print(f"you went running --> add data into spreadsheet")
+if was_running_exercise:
+    print(f"you went running --> adding data into run spreadsheet")
     add_run_info_to_spreadsheet(duration, miles_run, calories)
+    print("successfully added row into spreadsheet")
 else:
-    print("you didn't go running, so not entering into spreadsheet")
+    print("you didn't go running --> ignoring information")
